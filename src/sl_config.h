@@ -1,13 +1,11 @@
 /*
  * sl_config.h — the settings GnuChanSL is built from.
  *
- * GnuChanSL is configured by a script, not by a file of key = value pairs, the
- * same way GnuChanWM and GnuChanSS are: the same file a person would write to
- * change a colour or the message on the screen. That script is Python, and this
- * header is the shape of what running it produces — the small, fixed set of
- * things a lock screen can be asked for.
+ * GnuChanSL is configured by a plain Key = value file. Older static call
+ * syntax is parsed without execution for compatibility. This header is the
+ * small, fixed set of values a lock screen can be asked for.
  *
- * Everything here is plain data. The script is read by sl_parser.c, walked by
+ * Everything here is plain data. The file is read by sl_parser.c, walked by
  * sl_config.c, and drawn by GnuChanSL.c. Nothing in this header knows about X.
  */
 #ifndef GNUCHANSL_CONFIG_H
@@ -61,7 +59,7 @@ typedef struct SlConfig {
    the user's name, and a clock. */
 void sl_config_defaults(SlConfig *config);
 
-/* Read the script at path into config. Returns 0 when the file was read and
+/* Read the settings at path into config. Returns 0 when the file was read and
    walked, -1 when it could not be opened or could not be parsed — in which case
    config is left at its defaults and `error` says why. */
 int sl_config_load(SlConfig *config, const char *path);
@@ -70,8 +68,8 @@ int sl_config_load(SlConfig *config, const char *path);
    file. Always leaves a usable config. Returns 0 when a file was read. */
 int sl_config_load_default(SlConfig *config);
 
-/* Where the script is looked for: $XDG_CONFIG_HOME/GnuChanSL/GnuChanSL.py, or
-   ~/.config/GnuChanSL/GnuChanSL.py. Written into buffer, which is returned. */
+/* Where settings are looked for: $XDG_CONFIG_HOME/GnuChanSL/GnuChanSL.conf, or
+   ~/.config/GnuChanSL/GnuChanSL.conf. */
 char *sl_config_path(char *buffer, unsigned int size);
 
 #endif /* GNUCHANSL_CONFIG_H */

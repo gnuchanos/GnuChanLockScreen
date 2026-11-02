@@ -51,9 +51,9 @@ PAM_DIR = Path("/etc/pam.d")
 PAM_SERVICE = "gnuchansl"
 PAM_COMMON = "common-auth"
 
-CONFIG_SOURCE = ROOT / "GnuChanSL_config" / "GnuChanSL.py"
+CONFIG_SOURCE = ROOT / "GnuChanSL_config" / "GnuChanSL.conf"
 CONFIG_DIR_NAME = "GnuChanSL"
-CONFIG_FILE_NAME = "GnuChanSL.py"
+CONFIG_FILE_NAME = "GnuChanSL.conf"
 
 SOURCES = (
     "sl_parser.c",
@@ -370,10 +370,14 @@ def install_config() -> None:
             f"have nothing to read"
         )
 
+    legacy = directory / "GnuChanSL.py"
     directory.mkdir(parents=True, exist_ok=True)
     if file_target.exists():
-        file_target.unlink()
-        detail(f"removed the old {file_target}")
+        detail(f"kept existing settings {file_target}")
+        return
+    if legacy.exists():
+        detail(f"kept legacy settings {legacy}; the program reads it safely")
+        return
 
     shutil.copyfile(CONFIG_SOURCE, file_target)
     try:

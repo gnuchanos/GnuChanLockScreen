@@ -1,9 +1,8 @@
 /*
- * sl_config.c — the walk that gives the settings script its meaning.
+ * sl_config.c — apply parsed settings values to the lock-screen configuration.
  *
- * sl_parser.c reads the file as a name and a value, or a name and a call. This
- * is the other half: it knows which call a lock screen understands and what
- * each of its arguments means.
+ * sl_parser.c reads plain assignments and safe legacy call syntax. This is the
+ * other half: it knows which values a lock screen understands.
  *
  * The one call it understands, whole:
  *
@@ -35,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "sl_config.h"
 #include "sl_parser.h"
@@ -154,12 +154,12 @@ static void read_lock(SlConfig *config, const SlStatement *statement) {
 char *sl_config_path(char *buffer, unsigned int size) {
     const char *xdg = getenv("XDG_CONFIG_HOME");
     if (xdg && xdg[0]) {
-        snprintf(buffer, size, "%s/GnuChanSL/GnuChanSL.py", xdg);
+        snprintf(buffer, size, "%s/GnuChanSL/GnuChanSL.conf", xdg);
         return buffer;
     }
     const char *home = getenv("HOME");
     if (home && home[0]) {
-        snprintf(buffer, size, "%s/.config/GnuChanSL/GnuChanSL.py", home);
+        snprintf(buffer, size, "%s/.config/GnuChanSL/GnuChanSL.conf", home);
         return buffer;
     }
     buffer[0] = '\0';
@@ -189,6 +189,14 @@ int sl_config_load(SlConfig *config, const char *path) {
         if (statements[i].kind == SL_STMT_CALL &&
             strcmp(statements[i].target, "gcl_SL.Lock") == 0) {
             read_lock(config, &statements[i]);
+        } else if (statements[i].kind == SL_STMT_ASSIGN) {
+            SlStatement flat = {0};
+            flat.kind = SL_STMT_CALL;
+            flat.arg_count = 1;
+            snprintf(flat.args[0].name, sizeof(flat.args[0].name), "%s",
+                     statements[i].target);
+            flat.args[0].value = statements[i].value;
+            read_lock(config, &flat);
         }
         /* Every other statement is a name or a call this program does not act
            on. It is left alone: a script is lived in. */
@@ -216,6 +224,17 @@ int sl_config_load_default(SlConfig *config) {
     if (!path[0]) {
         sl_config_defaults(config);
         return -1;
+    }
+    if (access(path, R_OK) != 0) {
+        char legacy[SL_TEXT_LENGTH];
+        snprintf(legacy, sizeof(legacy), "%s", path);
+        char *suffix = strrchr(legacy, '.');
+        if (suffix && strcmp(suffix, ".conf") == 0) {
+            strcpy(suffix, ".py");
+            if (access(legacy, R_OK) == 0) {
+                snprintf(path, sizeof(path), "%s", legacy);
+            }
+        }
     }
     if (sl_config_load(config, path) != 0) {
         return -1;
