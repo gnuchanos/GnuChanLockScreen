@@ -51,7 +51,7 @@ PAM_DIR = Path("/etc/pam.d")
 PAM_SERVICE = "gnuchansl"
 PAM_COMMON = "common-auth"
 
-CONFIG_SOURCE = ROOT / "GnuChanSL_config" / "GnuChanSL.conf"
+CONFIG_SOURCE = ROOT / "config" / "config.conf"
 CONFIG_DIR_NAME = "GnuChanSL"
 CONFIG_FILE_NAME = "GnuChanSL.conf"
 
@@ -280,7 +280,7 @@ def desktop_entry() -> str:
     return "\n".join([
         "[Desktop Entry]",
         "Type=Application",
-        "Name=GnuChanSL",
+        "Name=GnuChan Lock Screen",
         "Comment=GnuchanOS lock screen",
         f"Exec={BIN_DIR / PROGRAM}",
         f"TryExec={BIN_DIR / PROGRAM}",
